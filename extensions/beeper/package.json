@@ -1,0 +1,488 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "beeper",
+  "title": "Beeper",
+  "description": "Manage all your messaging services through Beeper - WhatsApp, Telegram, Signal, Instagram, and more",
+  "icon": "beeper.png",
+  "author": "gareth_price",
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "open-chat",
+      "title": "Open Chat",
+      "subtitle": "Beeper",
+      "description": "Search and open chats from any connected messaging service",
+      "mode": "view",
+      "filename": "open-chat.tsx"
+    },
+    {
+      "name": "list-accounts",
+      "title": "Connected Accounts",
+      "subtitle": "Beeper",
+      "description": "View all connected messaging services",
+      "mode": "view",
+      "filename": "list-accounts.tsx"
+    },
+    {
+      "name": "search-chats",
+      "title": "Search Chats",
+      "subtitle": "Beeper",
+      "description": "Search across all chats in Beeper with real-time results",
+      "mode": "view",
+      "filename": "search-chats.tsx"
+    },
+    {
+      "name": "search-messages",
+      "title": "Search Messages",
+      "subtitle": "Beeper",
+      "description": "Search message content across all Beeper chats",
+      "mode": "view",
+      "filename": "search-messages.tsx"
+    }
+  ],
+  "tools": [
+    {
+      "name": "open-chat",
+      "title": "Open Chat",
+      "description": "Opens a chat in Beeper by searching for a contact or group name. Use this when the user wants to open, view, or go to a conversation. Supports partial names and fuzzy matching. The 'service' parameter is optional - only specify it if the user explicitly mentions a service like WhatsApp, Telegram, Signal, etc."
+    },
+    {
+      "name": "send-message",
+      "title": "Send Message",
+      "description": "Sends a message to a contact or group via Beeper. Use this when the user wants to send, text, message, tell, or write to someone. The 'name' parameter is the recipient (supports partial names like 'mom' or 'John'). The 'message' parameter is the text content to send. The 'service' parameter is optional - only include if the user specifies a particular messaging platform."
+    },
+    {
+      "name": "list-accounts",
+      "title": "List Accounts",
+      "description": "Lists all connected messaging services in Beeper. Use this when the user asks about their connected accounts, linked services, or wants to see which platforms are available."
+    },
+    {
+      "name": "search-messages",
+      "title": "Search Messages",
+      "description": "Searches message content across all Beeper chats. Use this when the user wants to find, search for, or look up specific messages or conversations about a topic. The 'query' parameter is the text to search for. The optional 'sender' parameter can be 'me' (messages sent by user) or 'others' (messages from others). Returns matching messages with sender, service, and timestamps."
+    }
+  ],
+  "ai": {
+    "evals": [
+      {
+        "input": "@beeper Open chat with John",
+        "mocks": {
+          "open-chat": "{ \"openedChat\": \"John Smith\", \"service\": \"whatsapp\" }"
+        },
+        "expected": [
+          {
+            "callsTool": {
+              "name": "open-chat",
+              "arguments": {
+                "name": "John"
+              }
+            }
+          },
+          {
+            "meetsCriteria": "Confirms the chat with John has been opened"
+          }
+        ]
+      },
+      {
+        "input": "@beeper message John",
+        "mocks": {
+          "open-chat": "{ \"openedChat\": \"John Smith\", \"service\": \"whatsapp\" }"
+        },
+        "expected": [
+          {
+            "callsTool": {
+              "name": "open-chat",
+              "arguments": {
+                "name": "John"
+              }
+            }
+          },
+          {
+            "meetsCriteria": "Opens chat with John"
+          }
+        ]
+      },
+      {
+        "input": "@beeper text mom",
+        "mocks": {
+          "open-chat": "{ \"openedChat\": \"Mom\", \"service\": \"imessage\" }"
+        },
+        "expected": [
+          {
+            "callsTool": {
+              "name": "open-chat",
+              "arguments": {
+                "name": "mom"
+              }
+            }
+          },
+          {
+            "meetsCriteria": "Opens chat with mom"
+          }
+        ]
+      },
+      {
+        "input": "@beeper open Sarah's chat on WhatsApp",
+        "mocks": {
+          "open-chat": "{ \"openedChat\": \"Sarah\", \"service\": \"whatsapp\" }"
+        },
+        "expected": [
+          {
+            "callsTool": {
+              "name": "open-chat",
+              "arguments": {
+                "name": "Sarah",
+                "service": "whatsapp"
+              }
+            }
+          },
+          {
+            "meetsCriteria": "Opens Sarah's WhatsApp chat"
+          }
+        ]
+      },
+      {
+        "input": "@beeper go to the family group chat",
+        "mocks": {
+          "open-chat": "{ \"openedChat\": \"Family Group\", \"service\": \"whatsapp\" }"
+        },
+        "expected": [
+          {
+            "callsTool": {
+              "name": "open-chat",
+              "arguments": {
+                "name": "family group"
+              }
+            }
+          },
+          {
+            "meetsCriteria": "Opens the family group chat"
+          }
+        ]
+      },
+      {
+        "input": "@beeper Send a message to Sarah on Telegram: Hey, are you free tonight?",
+        "mocks": {
+          "send-message": "{ \"sentTo\": \"Sarah\", \"service\": \"telegram\" }"
+        },
+        "expected": [
+          {
+            "callsTool": {
+              "name": "send-message",
+              "arguments": {
+                "name": "Sarah",
+                "message": "Hey, are you free tonight?",
+                "service": "telegram"
+              }
+            }
+          },
+          {
+            "meetsCriteria": "Confirms the message was sent to Sarah via Telegram"
+          }
+        ]
+      },
+      {
+        "input": "@beeper message John hi there",
+        "mocks": {
+          "send-message": "{ \"sentTo\": \"John\", \"service\": \"whatsapp\" }"
+        },
+        "expected": [
+          {
+            "callsTool": {
+              "name": "send-message",
+              "arguments": {
+                "name": "John",
+                "message": "hi there"
+              }
+            }
+          },
+          {
+            "meetsCriteria": "Confirms message was sent to John"
+          }
+        ]
+      },
+      {
+        "input": "@beeper text mom on whatsapp saying I'll be late for dinner",
+        "mocks": {
+          "send-message": "{ \"sentTo\": \"Mom\", \"service\": \"whatsapp\" }"
+        },
+        "expected": [
+          {
+            "callsTool": {
+              "name": "send-message",
+              "arguments": {
+                "name": "mom",
+                "message": "I'll be late for dinner",
+                "service": "whatsapp"
+              }
+            }
+          },
+          {
+            "meetsCriteria": "Confirms message was sent to mom"
+          }
+        ]
+      },
+      {
+        "input": "@beeper send \"meeting at 3pm\" to Mike",
+        "mocks": {
+          "send-message": "{ \"sentTo\": \"Mike\", \"service\": \"slack\" }"
+        },
+        "expected": [
+          {
+            "callsTool": {
+              "name": "send-message",
+              "arguments": {
+                "name": "Mike",
+                "message": "meeting at 3pm"
+              }
+            }
+          },
+          {
+            "meetsCriteria": "Confirms message was sent to Mike"
+          }
+        ]
+      },
+      {
+        "input": "@beeper tell the work group that the deadline is extended",
+        "mocks": {
+          "send-message": "{ \"sentTo\": \"Work Group\", \"service\": \"slack\" }"
+        },
+        "expected": [
+          {
+            "callsTool": {
+              "name": "send-message",
+              "arguments": {
+                "name": "work group",
+                "message": "the deadline is extended"
+              }
+            }
+          },
+          {
+            "meetsCriteria": "Confirms message was sent to work group"
+          }
+        ]
+      },
+      {
+        "input": "@beeper write to David: Thanks for your help!",
+        "mocks": {
+          "send-message": "{ \"sentTo\": \"David\", \"service\": \"telegram\" }"
+        },
+        "expected": [
+          {
+            "callsTool": {
+              "name": "send-message",
+              "arguments": {
+                "name": "David",
+                "message": "Thanks for your help!"
+              }
+            }
+          },
+          {
+            "meetsCriteria": "Confirms message was sent to David"
+          }
+        ]
+      },
+      {
+        "input": "@beeper DM Alex on Discord: you online?",
+        "mocks": {
+          "send-message": "{ \"sentTo\": \"Alex\", \"service\": \"discord\" }"
+        },
+        "expected": [
+          {
+            "callsTool": {
+              "name": "send-message",
+              "arguments": {
+                "name": "Alex",
+                "message": "you online?",
+                "service": "discord"
+              }
+            }
+          },
+          {
+            "meetsCriteria": "Confirms message was sent to Alex on Discord"
+          }
+        ]
+      },
+      {
+        "input": "@beeper What messaging services do I have connected?",
+        "mocks": {
+          "list-accounts": "[{ \"service\": \"whatsapp\", \"displayName\": \"WhatsApp\", \"isConnected\": true }]"
+        },
+        "expected": [
+          {
+            "callsTool": {
+              "name": "list-accounts"
+            }
+          },
+          {
+            "meetsCriteria": "Lists the connected messaging services"
+          }
+        ]
+      },
+      {
+        "input": "@beeper show my accounts",
+        "mocks": {
+          "list-accounts": "[{ \"service\": \"whatsapp\", \"displayName\": \"WhatsApp\", \"isConnected\": true }]"
+        },
+        "expected": [
+          {
+            "callsTool": {
+              "name": "list-accounts"
+            }
+          },
+          {
+            "meetsCriteria": "Shows connected accounts"
+          }
+        ]
+      },
+      {
+        "input": "@beeper which services are linked?",
+        "mocks": {
+          "list-accounts": "[{ \"service\": \"telegram\", \"displayName\": \"Telegram\", \"isConnected\": true }]"
+        },
+        "expected": [
+          {
+            "callsTool": {
+              "name": "list-accounts"
+            }
+          },
+          {
+            "meetsCriteria": "Lists linked services"
+          }
+        ]
+      },
+      {
+        "input": "@beeper what can I message with?",
+        "mocks": {
+          "list-accounts": "[{ \"service\": \"signal\", \"displayName\": \"Signal\", \"isConnected\": true }]"
+        },
+        "expected": [
+          {
+            "callsTool": {
+              "name": "list-accounts"
+            }
+          },
+          {
+            "meetsCriteria": "Shows available messaging platforms"
+          }
+        ]
+      },
+      {
+        "input": "@beeper search for messages about dinner",
+        "mocks": {
+          "search-messages": "{ \"messages\": [{ \"text\": \"Are we still on for dinner?\", \"sender\": \"Mom\", \"service\": \"WhatsApp\" }], \"count\": 1 }"
+        },
+        "expected": [
+          {
+            "callsTool": {
+              "name": "search-messages",
+              "arguments": {
+                "query": "dinner"
+              }
+            }
+          },
+          {
+            "meetsCriteria": "Returns messages about dinner"
+          }
+        ]
+      },
+      {
+        "input": "@beeper find messages I sent about the meeting",
+        "mocks": {
+          "search-messages": "{ \"messages\": [{ \"text\": \"Meeting at 3pm\", \"sender\": \"You\", \"service\": \"Slack\" }], \"count\": 1 }"
+        },
+        "expected": [
+          {
+            "callsTool": {
+              "name": "search-messages",
+              "arguments": {
+                "query": "meeting",
+                "sender": "me"
+              }
+            }
+          },
+          {
+            "meetsCriteria": "Returns messages about meeting sent by user"
+          }
+        ]
+      },
+      {
+        "input": "@beeper look up messages from others about tomorrow",
+        "mocks": {
+          "search-messages": "{ \"messages\": [{ \"text\": \"See you tomorrow!\", \"sender\": \"John\", \"service\": \"Telegram\" }], \"count\": 1 }"
+        },
+        "expected": [
+          {
+            "callsTool": {
+              "name": "search-messages",
+              "arguments": {
+                "query": "tomorrow",
+                "sender": "others"
+              }
+            }
+          },
+          {
+            "meetsCriteria": "Returns messages from others about tomorrow"
+          }
+        ]
+      },
+      {
+        "input": "@beeper what did Sarah say about the project?",
+        "mocks": {
+          "search-messages": "{ \"messages\": [{ \"text\": \"The project deadline is Friday\", \"sender\": \"Sarah\", \"service\": \"Slack\" }], \"count\": 1 }"
+        },
+        "expected": [
+          {
+            "callsTool": {
+              "name": "search-messages",
+              "arguments": {
+                "query": "project"
+              }
+            }
+          },
+          {
+            "meetsCriteria": "Returns messages about the project"
+          }
+        ]
+      }
+    ]
+  },
+  "categories": [
+    "Applications",
+    "Communication",
+    "Productivity"
+  ],
+  "preferences": [
+    {
+      "name": "accessToken",
+      "type": "password",
+      "required": false,
+      "title": "Access Token",
+      "description": "Beeper Desktop API Access Token. If not provided, the extension will try to connect without it (or use a dummy token).",
+      "placeholder": "Enter your access token if required"
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^1.102.6",
+    "@raycast/utils": "^1.19.0",
+    "@beeper/desktop-api": "^0.1.4",
+    "fromnow": "^3.0.1"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^1.0.8",
+    "@types/node": "^20.8.10",
+    "@types/react": "^18.3.3",
+    "eslint": "^7.32.0",
+    "prettier": "^2.5.1",
+    "react": "^18.2.0",
+    "typescript": "^4.4.3"
+  },
+  "scripts": {
+    "build": "ray build -e dist",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint",
+    "prepublishOnly": "echo \"\\n\\nIt seems like you are trying to publish the Raycast extension to npm.\\n\\nIf you did intend to publish it to npm, remove the \\`prepublishOnly\\` script and rerun \\`npm publish\\` again.\\nIf you wanted to publish it to the Raycast Store instead, use \\`npm run publish\\` instead.\\n\\n\" && exit 1",
+    "publish": "npx @raycast/api@latest publish"
+  }
+}
