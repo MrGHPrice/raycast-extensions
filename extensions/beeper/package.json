@@ -56,7 +56,7 @@
     {
       "name": "summarize-unread",
       "title": "Summarize Unread Messages",
-      "description": "Gets unread messages from a specific chat for summarization. Use this when the user wants to know what they missed, summarize unread messages, or catch up on a conversation. The 'chatName' parameter is the name of the chat (person or group). The optional 'service' parameter filters by messaging platform. Returns the unread messages which you should summarize in a helpful way."
+      "description": "Gets unread messages for summarization. Use this when the user wants to know what they missed, summarize unread messages, or catch up on conversations. If 'chatName' is provided, returns unread messages from that specific chat. If 'chatName' is NOT provided, returns a summary list of ALL chats with unread messages (chat names, services, and unread counts). The optional 'service' parameter filters by messaging platform. Summarize the results in a helpful way for the user."
     },
     {
       "name": "summarize-messages",
@@ -502,6 +502,57 @@
           },
           {
             "meetsCriteria": "Summarizes unread WhatsApp messages from John"
+          }
+        ]
+      },
+      {
+        "input": "@beeper what unread messages do I have?",
+        "mocks": {
+          "summarize-unread": "{ \"unreadCount\": 3, \"totalUnreadCount\": 8, \"unreadChats\": [{ \"chatName\": \"Mom\", \"service\": \"WhatsApp\", \"unreadCount\": 3, \"chatType\": \"single\" }, { \"chatName\": \"Work Group\", \"service\": \"Slack\", \"unreadCount\": 5, \"chatType\": \"group\" }] }"
+        },
+        "expected": [
+          {
+            "callsTool": {
+              "name": "summarize-unread",
+              "arguments": {}
+            }
+          },
+          {
+            "meetsCriteria": "Lists all chats with unread messages"
+          }
+        ]
+      },
+      {
+        "input": "@beeper do I have any unread messages?",
+        "mocks": {
+          "summarize-unread": "{ \"unreadCount\": 2, \"totalUnreadCount\": 4, \"unreadChats\": [{ \"chatName\": \"John\", \"service\": \"Telegram\", \"unreadCount\": 2, \"chatType\": \"single\" }, { \"chatName\": \"Family\", \"service\": \"WhatsApp\", \"unreadCount\": 2, \"chatType\": \"group\" }] }"
+        },
+        "expected": [
+          {
+            "callsTool": {
+              "name": "summarize-unread",
+              "arguments": {}
+            }
+          },
+          {
+            "meetsCriteria": "Shows whether there are unread messages and lists them"
+          }
+        ]
+      },
+      {
+        "input": "@beeper summarize all my unread messages",
+        "mocks": {
+          "summarize-unread": "{ \"unreadCount\": 1, \"totalUnreadCount\": 3, \"unreadChats\": [{ \"chatName\": \"Sarah\", \"service\": \"Signal\", \"unreadCount\": 3, \"chatType\": \"single\" }] }"
+        },
+        "expected": [
+          {
+            "callsTool": {
+              "name": "summarize-unread",
+              "arguments": {}
+            }
+          },
+          {
+            "meetsCriteria": "Summarizes all unread messages across chats"
           }
         ]
       },

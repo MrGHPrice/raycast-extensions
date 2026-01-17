@@ -5,11 +5,12 @@ import { rankChatMatches, getSuggestionMessage } from "../utils/contact-matching
 
 type Input = {
   /**
-   * The name of the chat to summarize unread messages from.
+   * Optional: The name of the chat to summarize unread messages from.
    * Can be a person's name like "John Smith", partial name like "John",
    * nickname like "mom", or group name like "Family Group".
+   * If not provided, returns a summary list of ALL chats with unread messages.
    */
-  chatName: string;
+  chatName?: string;
   /**
    * Optional: specific messaging service to filter by.
    * Examples: "whatsapp", "telegram", "signal", "discord", "slack", "imessage"
@@ -24,16 +25,29 @@ interface UnreadMessage {
   timestamp: string;
 }
 
-interface SummarizeResult {
+interface UnreadChatSummary {
   chatName: string;
   service: string;
   unreadCount: number;
-  messages: UnreadMessage[];
+  chatType: string;
+  lastActivity?: string;
+}
+
+interface SummarizeResult {
+  chatName?: string;
+  service?: string;
+  unreadCount: number;
+  messages?: UnreadMessage[];
+  /** When chatName is not provided, this contains all chats with unread messages */
+  unreadChats?: UnreadChatSummary[];
+  /** Total unread messages across all chats (when chatName is not provided) */
+  totalUnreadCount?: number;
 }
 
 /**
  * Gets unread messages from a specific chat for AI summarization.
- * Searches for the chat by name, fetches recent messages, and filters for unread ones.
+ * If chatName is provided, searches for the chat and fetches its unread messages.
+ * If chatName is not provided, returns a summary list of all chats with unread messages.
  */
 export default async function (input: Input): Promise<SummarizeResult> {
   // 1. Check Beeper connection
@@ -44,7 +58,12 @@ export default async function (input: Input): Promise<SummarizeResult> {
 
   const client = await getBeeperClient();
 
-  // 2. Search for chat by name
+  // 2. If no chatName provided, return summary of all chats with unread messages
+  if (!input.chatName) {
+    return await getAllUnreadChatsSummary(client, input.service);
+  }
+
+  // 3. Search for specific chat by name
   const searchCursor = await client.chats.search({
     query: input.chatName,
     limit: 20,
@@ -147,5 +166,68 @@ export default async function (input: Input): Promise<SummarizeResult> {
     service,
     unreadCount,
     messages: unreadMessages,
+  };
+}
+
+/**
+ * Gets a summary of all chats with unread messages.
+ * Returns chat names, services, and unread counts sorted by unread count.
+ */
+async function getAllUnreadChatsSummary(
+  client: Awaited<ReturnType<typeof getBeeperClient>>,
+  serviceFilter?: string
+): Promise<SummarizeResult> {
+  // Fetch recent chats (get a good sample to find unread ones)
+  const searchCursor = await client.chats.search({
+    limit: 100,
+    includeMuted: true,
+  });
+
+  // Collect all chats
+  const allChats: Array<{
+    id: string;
+    title: string;
+    network: string;
+    type?: string;
+    lastActivity?: string;
+    unreadCount?: number;
+  }> = [];
+
+  for await (const chat of searchCursor) {
+    allChats.push(chat);
+    if (allChats.length >= 100) break;
+  }
+
+  // Filter for chats with unread messages
+  let unreadChats = allChats.filter((chat) => chat.unreadCount && chat.unreadCount > 0);
+
+  // Apply service filter if provided
+  if (serviceFilter) {
+    const normalizedFilter = serviceFilter.toLowerCase();
+    unreadChats = unreadChats.filter((chat) => {
+      const chatService = chat.network?.toLowerCase() || "";
+      return chatService.includes(normalizedFilter) || normalizedFilter.includes(chatService);
+    });
+  }
+
+  // Sort by unread count (highest first)
+  unreadChats.sort((a, b) => (b.unreadCount || 0) - (a.unreadCount || 0));
+
+  // Calculate total unread count
+  const totalUnreadCount = unreadChats.reduce((sum, chat) => sum + (chat.unreadCount || 0), 0);
+
+  // Transform to summary format
+  const unreadChatsSummary: UnreadChatSummary[] = unreadChats.map((chat) => ({
+    chatName: chat.title || "Unknown Chat",
+    service: getServiceDisplayName(parseService(chat.network)),
+    unreadCount: chat.unreadCount || 0,
+    chatType: chat.type || "single",
+    lastActivity: chat.lastActivity,
+  }));
+
+  return {
+    unreadCount: unreadChats.length,
+    totalUnreadCount,
+    unreadChats: unreadChatsSummary,
   };
 }
