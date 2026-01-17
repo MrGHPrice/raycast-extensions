@@ -1,6 +1,6 @@
 # Beeper Raycast Extension Changelog
 
-## [Initial Version] - 2026-01-15
+## [Initial Version] - {PR_MERGE_DATE}
 
 ### Added
 - **Open Chat** command to search and open chats from any connected messaging service

@@ -2,11 +2,6 @@ import BeeperDesktop from "@beeper/desktop-api";
 import { OAuth, getPreferenceValues, LocalStorage } from "@raycast/api";
 import { OAuthService, getAccessToken } from "@raycast/utils";
 
-// Define locally to ensure type safety
-interface Preferences {
-  accessToken?: string;
-}
-
 let clientInstance: BeeperDesktop | null = null;
 let lastAccessToken: string | null = null;
 
@@ -66,13 +61,13 @@ export async function getBeeperClient(): Promise<BeeperDesktop> {
         accessToken = storedToken;
       } else {
         // LocalStorage empty, try preferences as last resort
-        const preferences = getPreferenceValues<Preferences>();
+        const preferences = getPreferenceValues<{ accessToken?: string }>();
         accessToken = preferences.accessToken;
       }
     } catch (storageError) {
       // LocalStorage also failed, try preferences
       console.warn("Could not retrieve token from storage, falling back to preferences");
-      const preferences = getPreferenceValues<Preferences>();
+      const preferences = getPreferenceValues<{ accessToken?: string }>();
       accessToken = preferences.accessToken;
     }
   }
