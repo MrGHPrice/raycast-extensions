@@ -24,14 +24,6 @@
       "filename": "list-accounts.tsx"
     },
     {
-      "name": "search-chats",
-      "title": "Search Chats",
-      "subtitle": "Beeper",
-      "description": "Search across all chats in Beeper with real-time results",
-      "mode": "view",
-      "filename": "search-chats.tsx"
-    },
-    {
       "name": "search-messages",
       "title": "Search Messages",
       "subtitle": "Beeper",
